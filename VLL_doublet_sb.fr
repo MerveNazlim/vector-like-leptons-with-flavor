@@ -1,0 +1,199 @@
+M$ModelName="VLL_Doublet";
+M$Information= {
+        Authors       -> {"Stefan Bißmann"},
+        Emails        -> {"stefan.bissmann@tu-dortmund.de"},
+        Institutions  -> {"TU Dortmund"},
+        Version       -> "0.1"
+};
+
+FeynmanGauge = False;
+
+(* New index for scalar fields*)
+IndexRange[Index[ScalarGen]] = Range[9];
+
+
+(* Interaction orders *)
+M$InteractionOrderHierarchy = {{QCD, 1}, {QED, 2}, {NP, 1}};
+M$InteractionOrderLimit     = {{QCD, 99}, {QED, 99}, {NP, 99}};
+
+
+(* Fields *)
+
+(*Vector like fermions, model a) *)
+
+M$ClassesDescription = {
+(*Mass eigenstate, for mass term in Lagrangian*)
+(*Psi*)
+
+F[16] == {
+		ClassName       ->      psim,                    
+                ClassMembers     ->     {psime, psimmu, psimta},      
+		Indices         ->      {Index[Generation]},
+                FlavorIndex     ->     Generation,
+                SelfConjugate   ->      False,
+		Mass            ->     {MFm, {MFm1,1000.}, {MFm2,1000.}, {MFm3,1000.}}, 
+		Width           ->     {WFm, {WFm1,1.}, {WFm2,0.}, {WFm3,0.}},
+                QuantumNumbers  ->     {Q -> -1, LeptonNumber -> 1},
+                PropagatorLabel ->     {"psim", "psim_1", "psim_2", "psim_3"},
+                ParticleName            ->     {"psie",  "psimu",  "psita" },
+                AntiParticleName        ->     {"psie~", "psimu~", "psita~"},
+                TeXParticleName         ->     {" \\psi^{-1}_1", "\\psi^{-1}_2", "\\psi^{-1}_3"},
+	        TeXAntiParticleName     ->  {"\\bar \\psi^{-1}_1", "\\bar\\psi^{-1}_2", "\\bar\\psi^{-1}_3"}
+},
+
+F[17] == {
+		ClassName       ->      psiz,                    
+                ClassMembers     ->     {psize, psizmu, psizta},      
+		Indices         ->      {Index[Generation]},
+                FlavorIndex     ->     Generation,
+                SelfConjugate   ->      False,
+		Mass            ->     {MFz, {MFz1,1000.}, {MFz2,1000.}, {MFz3,1000.}}, 
+		Width           ->     {WFz, {WFz1,1.}, {WFz2,0.}, {WFz3,0.}},
+                QuantumNumbers  ->     {Q -> 0, LeptonNumber -> 1},
+                PropagatorLabel ->     {"psiz", "psiz_1", "psiz_2", "psiz_3"},
+                ParticleName            ->     {"psie",  "psimu",  "psita" },
+                AntiParticleName        ->     {"psie~", "psimu~", "psita~"},
+                TeXParticleName         ->     {" \\psi^{0}_1", "\\psi^{0}_2", "\\psi^{0}_3"},
+	        TeXAntiParticleName     ->  {"\\bar \\psi^{0}_1", "\\bar\\psi^{0}_2", "\\bar\\psi^{0}_3"}
+},
+
+(*AllowSummation set to True by FeynRules, MF carries only 1 flavour index*)
+
+(*States for interaction*)
+
+(*Psi_R, right-handed components of psi*)
+F[18] == {
+                ClassName       -> psiR,   
+                Unphysical      -> True,   
+                Indices         -> {Index[SU2D], Index[Generation]},
+                FlavorIndex     -> SU2D,
+                SelfConjugate   -> False,
+                QuantumNumbers  -> {Y -> -1/2},
+                Definitions     -> { psiR[sp1_,1,ff_] :> Module[{sp2}, ProjP[sp1,sp2] psiz[sp2,ff]],  psiR[sp1_,2,ff_] :> Module[{sp2}, ProjP[sp1,sp2] psim[sp2,ff]] } 
+},
+
+
+(*Psi_L, left-handed components of psi*)
+F[19]=={
+                ClassName       ->      psiL,   
+                Unphysical      ->      True,   
+                Indices         ->      {Index[SU2D], Index[Generation]},
+                FlavorIndex     ->      SU2D,
+                SelfConjugate   ->      False,
+                QuantumNumbers  ->      {Y -> -1/2},
+                Definitions     ->      { psiL[sp1_,1,ff_] :> Module[{sp2}, ProjM[sp1,sp2] psiz[sp2,ff]], psiL[sp1_,2,ff_] :> Module[{sp2}, ProjM[sp1,sp2] psim[sp2,ff]] } (* just as in the SM.fr file *)
+},
+
+
+
+
+(*Now, we need the 9 complex scalars*)
+
+(*Mass eigenstates*)
+
+S[100]=={
+        ClassName       ->      Sij,
+        ClassMembers    ->      {S11, S12, S13,S21, S22, S23,S31, S32, S33},
+        Mass            ->      {MSij,{MS11,1000.}, {MS12,1000.},{MS13,1000.},{MS21,1000.}, {MS22,1000.},{MS23,1000.},{MS31,1000.}, {MS32,1000.},{MS33,1000.}},
+        Width           ->      {WSij,{WS11,0.}, {WS12,0.},{WS13,0.},{WS21,0.}, {WS22,0.},{WS23,0.},{WS31,0.}, {WS32,0.},{WS33,0.}},
+        Indices         ->      {Index[ScalarGen]},
+        FlavorIndex         ->      ScalarGen,
+        SelfConjugate   ->      False,
+        Width           ->      0,
+        PropagatorLabel ->      {"Sij","S11", "S12", "S13","S21", "S22", "S23","S31", "S32", "S33"},
+        ParticleName     ->     {"S11", "S12", "S13","S21", "S22", "S23","S31", "S32", "S33"},
+        AntiParticleName ->     {"S11~", "S12~", "S13~","S21~", "S22~", "S23~","S31~", "S32~", "S33~"}
+},
+
+(*Interaction eigenstates, are the same, but now nicer index contraction*)
+
+S[101]=={
+        ClassName       ->      Sc,
+        Unphysical      ->      True,   (*we need them only for the interaction*)
+        SelfConjugate   ->      False,
+        Indices         ->      {Index[Generation],Index[Generation]},
+        Definitions     ->      { Sc[1,1] :>  Module[{},S11], Sc[1,2] :>  Module[{},S12], Sc[1,3] :>  Module[{},S13],
+                                Sc[2,1] :>  Module[{},S21], Sc[2,2] :>  Module[{},S22], Sc[2,3] :>  Module[{},S23],
+                                Sc[3,1] :> Module[{},S31], Sc[3,2] :>  Module[{},S32], Sc[3,3] :>  Module[{},S33]} 
+}
+
+};
+
+
+
+(* Parameters *)
+
+(* kappa prime *)
+
+M$Parameters = {
+        KprimeRe == {
+        ParameterType    -> External,
+        ComplexParameter -> False,
+        Value            -> 1,
+        BlockName        ->  NP,
+        InteractionOrder -> {NP, 1}
+        },
+
+        KprimeIm == {
+        ParameterType    -> External,
+        ComplexParameter -> False,
+        Value            -> 0,
+        BlockName        ->  NP,
+        InteractionOrder -> {NP, 1}
+        },
+
+        Kprime == {
+        ParameterType    -> Internal,
+        ComplexParameter -> True,
+        Value      -> KprimeRe + I KprimeIm,
+        InteractionOrder -> {NP, 1}
+        },
+
+        Epsilon == {
+        ParameterType    -> External,
+        ComplexParameter -> False,
+        Value            -> 1,
+        BlockName        ->  NP,
+        InteractionOrder -> {NP, 0}
+        },
+
+        K == {
+        ParameterType    -> Internal,
+        ComplexParameter -> True,
+        Value      -> Epsilon  KprimeRe,
+        InteractionOrder -> {NP, 1}
+        },
+
+        Hvev == {
+        ParameterType    -> Internal,
+        ComplexParameter -> False,
+        Value      -> vev
+        }
+
+};
+
+(*Start with the new parts of the Lagrangian*)
+
+LVLLkin := Block[{mu}, ExpandIndices[I*(psiLbar.Ga[mu].DC[psiL, mu] +  psiRbar.Ga[mu].DC[psiR, mu]), FlavorExpand->True]]     (*From Claras file*)
+
+LVLLmass := Block[{sp1,ff1, sp2,ff2}, ExpandIndices[- MFm[ff1].psiLbar[sp1,2, ff1].psiR [sp1,2, ff1] - MFz[ff2].psiLbar[sp2,1, ff2].psiR [sp2,1, ff2] , FlavorExpand->True]] (*From Claras file*)
+
+LSijkin := Block[{ffs,mu}, ExpandIndices[ DC[Sijbar[ffs],mu] DC[Sij[ffs],mu], FlavorExpand->ScalarGen]] (*From Stefan*)
+
+LSijmass := Block[{ffs}, ExpandIndices[ - MSij[ffs] MSij[ffs] Sijbar[ffs] Sij[ffs], FlavorExpand->ScalarGen]] (*From Stefan*)
+
+(* Everything above is the same as in the singlet model *)
+
+LVLLYuk := Block[{sp1,ii1,ff1,ff2}, ExpandIndices[ -Kprime LLbar[sp1, ii1, ff1].psiR[sp1,ii1, ff2] Sc[ff1,ff2], FlavorExpand->True]] (*From Stefan*)
+
+LVLLHiggs := Block[{sp1,ff1,ii1}, ExpandIndices[ -K / Sqrt[2] lRbar[sp1, ff1].psiL[sp1, ii1 , ff1] H IndexDelta[ii1,2], FlavorExpand->True]] (*From Stefan, we include the factor 1/Sqrt[2] since we only take the physical Higgs field here*)
+
+LVLLMixZ := Block[{ff1,sp1,ii1,mu,sp2}, ExpandIndices[ (gw/(cw*2)*K*vev/(Sqrt[2]*MFm[ff1])) psiRbar[sp1,ii1, ff1].Ga[mu,sp1,sp2].lR[sp2,ff1] Z[mu] IndexDelta[ii1,2], FlavorExpand->True]] (*From Stefan and Clara, here we used the small angle approximation*)
+
+LVLLMixW := Block[{ff1,sp1,mu,sp2,ii1}, ExpandIndices[ -gw/Sqrt[2]*K*vev/(Sqrt[2]*MFm[ff1]) lRbar[sp1, ff1].Ga[mu,sp1,sp2].psiR[sp2,ii1,ff1] Wbar[mu] IndexDelta[ii1,1], FlavorExpand->True]] (*From Stefan and Clara, here we used the small angle approximation*)
+
+LVLLMixS :=  Block[{ff1,sp1,ii1,ff2}, ExpandIndices[ Kprime K Hvev /(Sqrt[2] MFm[ff1])  LLbar[sp1, ii1, ff1].lR[sp1,ff2] Sc[ff1,ff2]  IndexDelta[ii1,2], FlavorExpand->True]] (*From Stefan and Clara, here we used the small angle approximation*)
+
+LVLL := LVLLkin + LVLLmass + HC[LVLLmass] + LSijkin + LSijmass + LVLLYuk + HC[LVLLYuk] + LVLLHiggs + HC[LVLLHiggs] + LVLLMixZ + HC[LVLLMixZ] + LVLLMixW + HC[LVLLMixW] + LVLLMixS + HC[LVLLMixS]
+
+(**)
